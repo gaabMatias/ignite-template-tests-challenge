@@ -1,49 +1,26 @@
+
+import { IUsersRepository } from "../../repositories/IUsersRepository";
 import { InMemoryUsersRepository } from "../../repositories/in-memory/InMemoryUsersRepository";
-import { AuthenticateUserUseCase } from "../authenticateUser/AuthenticateUserUseCase";
-import { CreateUserUseCase } from "../createUser/CreateUserUseCase";
 import { ShowUserProfileUseCase } from "./ShowUserProfileUseCase";
 
-import { verify } from 'jsonwebtoken'
-
-let usersRepositoryInMemory: InMemoryUsersRepository;
-let createUserUseCase: CreateUserUseCase;
 let showUserProfileUseCase: ShowUserProfileUseCase;
-let authenticateUserUseCase: AuthenticateUserUseCase;
-
+let usersRepository: IUsersRepository;
 
 describe('Test showing a user profile', () => {
   beforeEach(() => {
-    usersRepositoryInMemory = new InMemoryUsersRepository
-
-    createUserUseCase = new CreateUserUseCase(
-      usersRepositoryInMemory);
-
+    usersRepository = new InMemoryUsersRepository()
     showUserProfileUseCase = new ShowUserProfileUseCase(
-      usersRepositoryInMemory);
-
-    authenticateUserUseCase = new AuthenticateUserUseCase(
-      usersRepositoryInMemory);
-
+      usersRepository)
   })
 
   it('should be able to receive a jwt token and show that user profile', async () => {
-    const newUser = {
+    const user = await usersRepository.create({
       name: 'users sample',
       email: 'users@example.com',
       password: 'test password'
-    }
-    await createUserUseCase.execute(newUser)
-
-    const auth = await authenticateUserUseCase.execute({
-      email: newUser.email,
-      password: newUser.password
     })
-    console.log(auth.user)
 
-    const { id }: string = auth.user
+    const userProfile = await showUserProfileUseCase.execute(user.id)
 
-    const profile = await showUserProfileUseCase.execute(id)
-
-    expect(profile).toContain({ newUser })
   })
 })
