@@ -1,26 +1,39 @@
+import { IUsersRepository } from '../../repositories/IUsersRepository';
+import { InMemoryUsersRepository } from '../../repositories/in-memory/InMemoryUsersRepository';
 
-import { IUsersRepository } from "../../repositories/IUsersRepository";
-import { InMemoryUsersRepository } from "../../repositories/in-memory/InMemoryUsersRepository";
 import { ShowUserProfileUseCase } from "./ShowUserProfileUseCase";
+import { User } from "../../entities/User";
+import { ShowUserProfileError } from "./ShowUserProfileError";
 
 let showUserProfileUseCase: ShowUserProfileUseCase;
 let usersRepository: IUsersRepository;
 
-describe('Test showing a user profile', () => {
+describe('Show Profile User', () => {
   beforeEach(() => {
-    usersRepository = new InMemoryUsersRepository()
-    showUserProfileUseCase = new ShowUserProfileUseCase(
-      usersRepository)
-  })
+    usersRepository = new InMemoryUsersRepository();
+    showUserProfileUseCase = new ShowUserProfileUseCase(usersRepository);
+  });
 
-  it('should be able to receive a jwt token and show that user profile', async () => {
+  it('should be able to show user profile', async () => {
     const user = await usersRepository.create({
-      name: 'users sample',
-      email: 'users@example.com',
-      password: 'test password'
-    })
+      name: 'John do',
+      email: 'john@do.com',
+      password: '123123'
+    });
 
-    const userProfile = await showUserProfileUseCase.execute(user.id)
+    if (user.id != undefined) {
+      const userProfile = await showUserProfileUseCase.execute(user.id)
 
-  })
-})
+      expect(userProfile).toBeInstanceOf(User);
+      expect(userProfile).toEqual(expect.objectContaining({
+        name: user.name,
+        email: user.email,
+      }));
+    };
+  });
+
+  it('should not be able to show user profile non existing user', async () => {
+    await expect(showUserProfileUseCase.execute('non-existing-user'))
+      .rejects.toBeInstanceOf(ShowUserProfileError);
+  });
+});
